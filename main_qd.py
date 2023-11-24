@@ -5,9 +5,9 @@ import numpy as np
 import sys
 import torch
 from pprint import pprint
-from config_pcn import cfg
-from core.train_pcn import train_net
-from core.test_pcn import test_net
+from config_qd import cfg
+from core.train_qd import train_net
+from core.test_qd import test_net
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.CONST.DEVICE
