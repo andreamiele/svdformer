@@ -4,21 +4,21 @@ __C = edict()
 cfg = __C
 
 # Dataset Config
-__C.DATASETS = edict()
-__C.DATASETS.QUICKDRAW = edict()
-__C.DATASETS.QUICKDRAW.CATEGORY_FILE_PATH = '../quickdraw_dataset/'
-__C.DATASETS.QUICKDRAW.N_POINTS = 2048  # This will need to be updated based on QuickDraw specifics
-__C.DATASETS.QUICKDRAW.DATA_PATH = './quickdraw_data/'
+__C.DATASETS                                     = edict()
+__C.DATASETS.SHAPENET55                          = edict()
+__C.DATASETS.SHAPENET55.CATEGORY_FILE_PATH       = '/content/svdformer_/quickdraw_dataset'
+__C.DATASETS.SHAPENET55.N_POINTS                 = 1024
+__C.DATASETS.SHAPENET55.COMPLETE_POINTS_PATH     = '/content/svdformer_/quickdraw_dataset'
 
 # Dataset
-__C.DATASET = edict()
-__C.DATASET.TRAIN_DATASET = 'QuickDraw'
-__C.DATASET.TEST_DATASET = 'QuickDraw'
+__C.DATASET                                      = edict()
+__C.DATASET.TRAIN_DATASET                        = 'QuickDraw'
+__C.DATASET.TEST_DATASET                         = 'QuickDraw'
 
 # Constants
 __C.CONST = edict()
 __C.CONST.NUM_WORKERS = 4
-__C.CONST.N_INPUT_POINTS = 2048  # Number of points per QuickDraw sketch, may require adjustment
+__C.CONST.N_INPUT_POINTS = 1024  # Number of points per QuickDraw sketch, may require adjustment
 __C.CONST.mode = 'easy'  # This mode concept may not apply to QuickDraw as it is for point clouds
 
 # Directories
@@ -37,8 +37,8 @@ __C.NETWORK.view_distance = 1.5  # This concept may not apply to QuickDraw sketc
 
 # Train
 __C.TRAIN = edict()
-__C.TRAIN.BATCH_SIZE = 16
-__C.TRAIN.N_EPOCHS = 300
+__C.TRAIN.BATCH_SIZE = 4
+__C.TRAIN.N_EPOCHS = 20
 __C.TRAIN.SAVE_FREQ = 5
 __C.TRAIN.LEARNING_RATE = 0.0001
 __C.TRAIN.LR_MILESTONES = [50, 100, 150, 200, 250]

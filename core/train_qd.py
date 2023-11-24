@@ -4,23 +4,30 @@ from models.SVDFormer import Model
 import sys
 sys.path.append('/content/svdformer_/utils')
 import dataloader_quickdraw as qd
+import torchvision.transforms as transforms
+# Define folder path and transformations
 
 def train_net(cfg):
     torch.backends.cudnn.benchmark = True
+    folder_path = '/content/svdformer_/quickdraw_dataset'
+    transformations = transforms.Compose([
+        # Add any transformations here
+        transforms.ToTensor(),
+    ])
 
+    # Create the dataset
+    quickdraw_dataset = qd.QuickDrawDataset(folder_path, transform=transformations)
     # QuickDraw dataset loading
-    train_dataset_loader = QuickDrawLoader(cfg, data_path='data/', subset='train')
-    test_dataset_loader = QuickDrawLoader(cfg, data_path='data/', subset='test')
+    train_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TRAIN_DATASET](cfg)
 
-    train_data_loader = torch.utils.data.DataLoader(dataset=train_dataset_loader,
-                                                    batch_size=cfg.TRAIN.BATCH_SIZE,
-                                                    num_workers=cfg.CONST.NUM_WORKERS,
-                                                    shuffle=True,
-                                                    drop_last=False)
-    val_data_loader = torch.utils.data.DataLoader(dataset=test_dataset_loader,
-                                                  batch_size=2,
-                                                  num_workers=cfg.CONST.NUM_WORKERS//2,
-                                                  shuffle=False)
+
+    train_data_loader = torch.utils.data.DataLoader(
+    quickdraw_dataset,
+    batch_size=32,  # Adjust as needed
+    shuffle=True,
+    num_workers=4,  # Adjust based on your system
+    collate_fn=None # Define if necessary
+)
     
     output_dir = os.path.join(cfg.DIR.OUT_PATH, '%s', datetime.now().isoformat())
     cfg.DIR.CHECKPOINTS = output_dir % 'checkpoints'
