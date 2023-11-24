@@ -6,9 +6,14 @@ import sys
 import torch
 from pprint import pprint
 from config_qd import cfg
+import sys
+sys.path.append('/Users/andreamiele/EPFL/ML/science4ml2023_latentvec/')
 from core.train_qd import train_net
 from core.test_qd import test_net
 
+
+
+from core.train_qd import train_net
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.CONST.DEVICE
 

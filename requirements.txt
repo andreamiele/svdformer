@@ -1,0 +1,8 @@
+easydict
+opencv-python
+transform3d
+transforms3d
+h5py
+timm
+open3d
+tensorboardX

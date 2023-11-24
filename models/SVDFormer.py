@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.parallel
 import torch.utils.data
-from pointnet2_ops.pointnet2_utils import gather_operation as gather_points
+from pointnet2_ops_lib.pointnet2_ops.pointnet2_utils import gather_operation as gather_points
 import time
 from models.model_utils import *
 from metrics.CD.chamfer3D.dist_chamfer_3D import chamfer_3DDist
