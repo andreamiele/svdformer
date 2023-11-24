@@ -1,9 +1,9 @@
 import torch
 import utils.data_loaders
 from models.SVDFormer import Model
-
-# Assuming you have created a QuickDrawLoader class
-from utils.quickdraw_loader import QuickDrawLoader  
+import sys
+sys.path.append('/content/svdformer_/utils')
+import dataloader_quickdraw as qd
 
 def train_net(cfg):
     torch.backends.cudnn.benchmark = True
