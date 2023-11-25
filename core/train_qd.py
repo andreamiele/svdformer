@@ -6,6 +6,25 @@ sys.path.append('/content/svdformer_/utils')
 import dataloader_quickdraw as qd
 import torchvision.transforms as transforms
 # Define folder path and transformations
+import logging
+import os
+import torch
+import utils.data_loaders
+import utils.helpers
+import argparse
+from tensorboardX import SummaryWriter
+from datetime import datetime
+from tqdm import tqdm
+from time import time
+from utils.average_meter import AverageMeter
+from torch.optim.lr_scheduler import StepLR
+from utils.schedular import GradualWarmupScheduler
+from utils.loss_utils import *
+from utils.helpers import seprate_point_cloud
+from models.model_utils import PCViews
+from models.SVDFormer import Model
+from core.eval_55 import test_net
+
 
 def train_net(cfg):
     torch.backends.cudnn.benchmark = True
@@ -18,17 +37,29 @@ def train_net(cfg):
     # Create the dataset
     quickdraw_dataset = qd.QuickDrawDataset(folder_path, transform=transformations)
     # QuickDraw dataset loading
-    train_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TRAIN_DATASET](cfg)
+    train_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING['ShapeNet55'](cfg)
 
 
     train_data_loader = torch.utils.data.DataLoader(
     quickdraw_dataset,
-    batch_size=32,  # Adjust as needed
-    shuffle=True,
+    batch_size=4,  # Adjust as needed
+    shuffle=False,
     num_workers=4,  # Adjust based on your system
-    collate_fn=None # Define if necessary
-)
+    collate_fn=None) # Define if necessary
     
+    quickdraw_dataset = qd.QuickDrawDataset(folder_path, transform=transformations)
+    # QuickDraw dataset loading
+    test_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING['ShapeNet55'](cfg)
+
+
+    val_data_loader = torch.utils.data.DataLoader(
+    quickdraw_dataset,
+    batch_size=4,  # Adjust as needed
+    shuffle=False,
+    num_workers=4,  # Adjust based on your system
+    collate_fn=None) # Define if necessary
+
+
     output_dir = os.path.join(cfg.DIR.OUT_PATH, '%s', datetime.now().isoformat())
     cfg.DIR.CHECKPOINTS = output_dir % 'checkpoints'
     cfg.DIR.LOGS = output_dir % 'logs'
@@ -87,7 +118,7 @@ def train_net(cfg):
         total_cd_p2 = 0
 
         batch_end_time = time()
-        n_batches = len(train_data_loader)
+        n_batches = 4#len(train_data_loader)
         print('epoch: ', epoch_idx, 'optimizer: ', optimizer.param_groups[0]['lr'])
         with tqdm(train_data_loader) as t:
             for batch_idx, (taxonomy_ids, model_ids, data) in enumerate(t):
@@ -145,6 +176,7 @@ def train_net(cfg):
             # Validate the current model
             cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model)
             # Save checkpoints
+            
             if epoch_idx % cfg.TRAIN.SAVE_FREQ == 0 or cd_eval < best_metrics:
                 if cd_eval < best_metrics:
                     best_metrics = cd_eval
@@ -160,7 +192,7 @@ def train_net(cfg):
                 }, output_path)
 
                 logging.info('Saved checkpoint to %s ...' % output_path)
-
+              
         logging.info('Best Performance: Epoch %d -- CD %.4f' % (BestEpoch,best_metrics))
 
     train_writer.close()

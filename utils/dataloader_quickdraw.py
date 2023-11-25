@@ -1,47 +1,40 @@
-import numpy as np
-import torch.utils.data
-import os
 
-def read_npy(file_path):
-    # Function to read npy file
-    return np.load(file_path)
+import os
+import numpy as np
+import torch
+import torch.utils.data
+import torchvision.transforms as transforms
 
 class QuickDrawDataset(torch.utils.data.Dataset):
-    def __init__(self, data_path, transforms=None):
-        self.data_path = data_path
-        self.transforms = transforms
-        self.file_list = self._get_file_list()
+    def __init__(self, folder_path, transform=None):
+        self.folder_path = folder_path
+        self.transform = transform
+        self.data = self.load_data()
+
+    def load_data(self):
+        # Load data from all .npy files in the folder
+        all_data = []
+        for file in os.listdir(self.folder_path):
+            if file.endswith('.npy'):
+                file_path = os.path.join(self.folder_path, file)
+                data = np.load(file_path, encoding='latin1', allow_pickle=True)
+                all_data.extend(data)
+        return all_data
 
     def __len__(self):
-        return len(self.file_list)
+        return len(self.data)
 
     def __getitem__(self, idx):
-        file_path = self.file_list[idx]
-        data = read_npy(file_path)
-        if self.transforms:
-            data = self.transforms(data)
-        return data
+        sample = self.data[idx]
+        drawing = sample['drawing']
+        processed_drawing = self.process_drawing(drawing)
 
-    def _get_file_list(self):
-        # Create a list of file paths from the data directory
-        file_list = [os.path.join(self.data_path, f) for f in os.listdir(self.data_path) if f.endswith('.npy')]
-        return file_list
+        if self.transform:
+            processed_drawing = self.transform(processed_drawing)
 
-class QuickDrawDataLoader(object):
-    def __init__(self, data_path, batch_size, num_workers):
-        self.data_path = data_path
-        self.batch_size = batch_size
-        self.num_workers = num_workers
+        return processed_drawing
 
-    def get_data_loader(self):
-        dataset = QuickDrawDataset(data_path=self.data_path)
-        data_loader = torch.utils.data.DataLoader(dataset=dataset,
-                                                  batch_size=self.batch_size,
-                                                  num_workers=self.num_workers,
-                                                  shuffle=True)
-        return data_loader
-
-# Usage Example
-data_path = 'path/to/quickdraw/data'
-quickdraw_loader = QuickDrawDataLoader(data_path, batch_size=32, num_workers=4)
-train_data_loader = quickdraw_loader.get_data_loader()
+    def process_drawing(self, drawing):
+        # Implement the conversion of drawing data here
+        processed_drawing = np.array(drawing)  # Placeholder
+        return processed_drawing
