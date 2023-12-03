@@ -358,7 +358,7 @@ class QDDataLoader(object):
 
 DATASET_LOADER_MAPPING = {
     'ShapeNet': ShapeNetDataLoader,
-    'ShapeNet55': ShapeNet55DataLoader
+    'ShapeNet55': ShapeNet55DataLoader,
     'QuickDraw': QDDataLoader
 }  # yapf: disable
 
