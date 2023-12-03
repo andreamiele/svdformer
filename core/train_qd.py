@@ -27,22 +27,60 @@ from core.eval_55 import test_net
 
 def convert_to_3d_point_cloud(drawing):
     """
-    Converts a 2D drawing to a 3D point cloud.
+    Converts a 2D drawing to a 3D point cloud tensor of shape 28x28x28.
 
-    :param drawing: 2D drawing array.
-    :return: 3D point cloud array.
+    :param drawing: 2D drawing tensor of shape 28x28.
+    :return: 3D point cloud tensor of shape 28x28x28.
     """
     # Reshape the drawing to 28x28
-    drawing = drawing.reshape(28, 28)
+    drawing = drawing.view(28, 28)
 
-    # Get the x, y coordinates of all drawn pixels
-    x_coords, y_coords = np.where(drawing > 0)
+    # Create a 3D tensor filled with zeros
+    point_cloud = torch.zeros((28, 28, 28), dtype=drawing.dtype)
 
-    # Set z-coordinates to 0
-    z_coords = np.zeros_like(x_coords)
+    # Place the 2D drawing in the xy-plane at z=0
+    point_cloud[:, :, 0] = drawing
 
-    # Create a 3D array of points
-    return np.vstack((x_coords, y_coords, z_coords)).T
+    return point_cloud
+
+def convert_to_3d_point_cloud_data(drawings):
+    """
+    Converts a batch of 2D drawings to 3D point clouds, each of shape 28x28x28.
+
+    :param drawings: Batch of 2D drawing tensors.
+    :return: Batch of 3D point cloud tensors.
+    """
+    res = [convert_to_3d_point_cloud(drawing) for drawing in drawings]
+
+    # Stack all tensors in the list to create a batch tensor
+    return torch.stack(res)
+
+def convert_grid_to_point_list(point_cloud):
+    """
+    Converts a 3D grid point cloud to a list of points.
+
+    :param point_cloud: 3D tensor of shape 28x28x28 representing a point cloud.
+    :return: 2D tensor of shape (N, 3) representing the point cloud as a list of points.
+    """
+    non_zero_indices = torch.nonzero(point_cloud)
+    return non_zero_indices.float()
+
+def convert_batch_to_xyz_format(batch_point_clouds):
+    """
+    Converts a batch of 3D grid point clouds to the xyz format.
+
+    :param batch_point_clouds: Batch of 3D grid point clouds.
+    :return: Tensor of shape (B, N, 3), where B is the batch size, N is the number of points, and 3 represents the x, y, z coordinates.
+    """
+    batch_size = batch_point_clouds.size(0)
+    point_list_batch = [convert_grid_to_point_list(batch_point_clouds[b]) for b in range(batch_size)]
+
+    # In case you need to pad the tensors to have the same number of points in each cloud
+    max_points = max([points.size(0) for points in point_list_batch])
+    padded_point_list_batch = [torch.nn.functional.pad(points, (0, 0, 0, max_points - points.size(0))) for points in point_list_batch]
+
+    return torch.stack(padded_point_list_batch)
+
 
 def train_net(cfg):
     torch.backends.cudnn.benchmark = True
