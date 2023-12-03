@@ -293,11 +293,72 @@ class ShapeNet55DataLoader(object):
               len(file_list))
         return file_list
 
+class QDDataset(torch.utils.data.dataset.Dataset):
+    def __init__(self, file_list, transforms=None):
+        self.file_list = file_list
+        self.transforms = transforms
+
+    def __len__(self):
+        return len(self.file_list)
+
+
+    def __getitem__(self, idx):
+        sample = self.file_list[idx]
+
+        file_path = sample['%s_path' % ri]
+        if type(file_path) == list:
+            file_path = file_path[rand_idx]
+        data = torch.from_numpy(IO.get(file_path).astype(np.float32))
+
+        if self.transforms is not None:
+            data = self.transforms(data)
+
+        return data
+
+class QDDataLoader(object):
+    """
+    QuickDraw: get dataset file list
+    """
+    def __init__(self, cfg):
+        self.cfg = cfg
+
+    def get_dataset(self, subset):
+        file_list = self._get_file_list(self.cfg, self._get_subset(subset))
+        transforms = None
+        return QDDataset(file_list, transforms)
+
+    def _get_subset(self, subset):
+        if subset == DatasetSubset.TRAIN:
+            return 'train'
+        else:
+            return 'test'
+
+    def _get_file_list(self, cfg, subset):
+        """Prepare file list for the dataset"""
+
+        # Load the dataset indexing file
+        with open(
+                #os.path.join(cfg.DATASETS.QD.CATEGORY_FILE_PATH,
+                os.path.join('/content/svdformer_/quickdraw_dataset',
+                  subset + '.txt'), 'r') as f:
+            lines = f.readlines()
+
+        # Collect file list
+        file_list = []
+        for line in lines:
+            line = line.strip()
+            #file_list.append(cfg.DATASETS.QD.COMPLETE_POINTS_PATH % (line))
+            file_list.append("/content/svdformer_/quickdraw_dataset/%s" % (line))
+
+        print('Complete collecting files of the dataset. Total files: %d' %
+              len(file_list))
+        return file_list
 
 # //////////////////////////////////////////// = Dataset Loader Mapping = //////////////////////////////////////////// #
 
 DATASET_LOADER_MAPPING = {
     'ShapeNet': ShapeNetDataLoader,
     'ShapeNet55': ShapeNet55DataLoader
+    'QuickDraw': QDDataLoader
 }  # yapf: disable
 
