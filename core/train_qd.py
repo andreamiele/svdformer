@@ -25,12 +25,30 @@ from models.model_utils import PCViews
 from models.SVDFormer import Model
 from core.eval_55 import test_net
 
+def convert_to_3d_point_cloud(drawing):
+    """
+    Converts a 2D drawing to a 3D point cloud.
+
+    :param drawing: 2D drawing array.
+    :return: 3D point cloud array.
+    """
+    # Reshape the drawing to 28x28
+    drawing = drawing.reshape(28, 28)
+
+    # Get the x, y coordinates of all drawn pixels
+    x_coords, y_coords = np.where(drawing > 0)
+
+    # Set z-coordinates to 0
+    z_coords = np.zeros_like(x_coords)
+
+    # Create a 3D array of points
+    return np.vstack((x_coords, y_coords, z_coords)).T
 
 def train_net(cfg):
     torch.backends.cudnn.benchmark = True
 
-    train_dataset_loader = QDDataLoader(cfg).get_dataset("train")
-    test_dataset_loader = QDDataLoader(cfg).get_dataset("test")
+    train_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING["QuickDraw"](cfg).get_dataset("train")
+    test_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING["QuickDraw"](cfg).get_dataset("test")
 
     train_data_loader = torch.utils.data.DataLoader(dataset=train_dataset_loader,
                                                     #batch_size=cfg.TRAIN.BATCH_SIZE,
@@ -70,14 +88,14 @@ def train_net(cfg):
     # Create the optimizers
     optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()),
                                  #lr=cfg.TRAIN.LEARNING_RATE,
-                                  lr=0.0001
+                                 lr=0.0001,
                                  weight_decay=0.0005)
 
     # lr scheduler
     #scheduler_steplr = StepLR(optimizer, step_size=cfg.TRAIN.LR_DECAY_STEP, gamma=cfg.TRAIN.GAMMA)
     scheduler_steplr = StepLR(optimizer, step_size=2, gamma=0.98)
 
-    lr_scheduler = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=300#cfg.TRAIN.WARMUP_STEPS,
+    lr_scheduler = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=300,#cfg.TRAIN.WARMUP_STEPS,
                                           after_scheduler=scheduler_steplr)
 
 
