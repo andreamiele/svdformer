@@ -23,7 +23,7 @@ from utils.loss_utils import *
 from utils.helpers import seprate_point_cloud
 from models.model_utils import PCViews
 from models.SVDFormer import Model
-from core.eval_55 import test_net
+from core.eval_qd import test_net
 
 def convert_to_3d_point_cloud(drawing):
     """
