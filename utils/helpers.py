@@ -82,7 +82,7 @@ def seprate_point_cloud(xyz,
         else:
             num_crop = crop
 
-        points = points.unsqueeze(0)
+        points = points.unsqueeze(0).cuda()
 
         if fixed_points is None:
             center = F.normalize(torch.randn(1, 1, 3), p=2, dim=-1).cuda()
