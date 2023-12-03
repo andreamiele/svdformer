@@ -303,11 +303,8 @@ class QDDataset(torch.utils.data.dataset.Dataset):
 
 
     def __getitem__(self, idx):
-        sample = self.file_list[idx]
-
-        file_path = sample['%s_path' % ri]
-        if type(file_path) == list:
-            file_path = file_path[rand_idx]
+        file_path = self.file_list[idx]
+        
         data = torch.from_numpy(IO.get(file_path).astype(np.float32))
 
         if self.transforms is not None:
