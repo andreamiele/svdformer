@@ -179,7 +179,7 @@ def train_net(cfg):
                 #    data[k] = utils.helpers.var_or_cuda(v)
                 # partial = data['partial_cloud']
                 #gt = data['gtcloud']
-                gt = convert_to_3d_point_cloud(data).cuda()
+                gt = convert_batch_to_xyz_format(convert_to_3d_point_cloud_data(data)).cuda()
                 batchsize,npoints,_ = gt.size()
                 if batchsize%2 != 0:
                     gt = torch.cat([gt,gt],0)
