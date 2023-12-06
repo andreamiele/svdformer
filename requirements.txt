@@ -1,5 +1,5 @@
 easydict==1.11
-h5py==3.7.0
+h5py
 matplotlib==3.5.1
 mc==0.0
 numpy==1.26.2
