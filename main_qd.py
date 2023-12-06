@@ -38,7 +38,7 @@ def main():
     # Get args from command line
     args = get_args_from_command_line()
     print('cuda available ', torch.cuda.is_available())
-
+    
     # Print config
     print('Use config:')
     pprint(cfg)
