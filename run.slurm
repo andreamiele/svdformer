@@ -5,6 +5,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4G
+#SBATCH --account=cs433
+#SBATCH --partition=standard
 
 module load gcc python
 srun python3 temp.py
