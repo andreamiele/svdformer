@@ -2,7 +2,6 @@ easydict==1.11
 h5py
 matplotlib
 numpy
-open3d
 opencv_python_headless
 setuptools
 tensorboardX
