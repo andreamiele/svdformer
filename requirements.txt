@@ -1,7 +1,6 @@
 easydict==1.11
 h5py
 matplotlib
-mc
 numpy
 open3d
 opencv_python_headless
