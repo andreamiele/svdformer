@@ -8,7 +8,4 @@
 #SBATCH --account=cs433
 
 module load gcc python
-srun python3 temp.py
-srun python3 pointnet2_ops_lib/setup.py install
-srun python3 metrics/CD/chamfer3D/setup.py install
-srun python3 metrics/EMD/setup.py install
+srun python3 setup.py install

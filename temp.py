@@ -4,10 +4,10 @@ test = open("quickdraw_dataset/test.txt", "w")
 train = open("quickdraw_dataset/train.txt", "w")
 for i, example in enumerate(airplane):
   if i == 20: break
-  np.save(f"airplane-{i}.npy", example)
+  np.save(f"quickdraw_dataset/airplane-{i}.npy", example)
   if i < 15:
-    train.write(f"airplane-{i}.npy\n")
+    train.write(f"quickdraw_dataset/airplane-{i}.npy\n")
   else:
-    test.write(f"airplane-{i}.npy\n")
+    test.write(f"quickdraw_dataset/airplane-{i}.npy\n")
 test.close()
 train.close()
