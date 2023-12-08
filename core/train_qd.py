@@ -228,29 +228,50 @@ def train_net(cfg):
             #(epoch_idx, cfg.TRAIN.N_EPOCHS, epoch_end_time - epoch_start_time, ['%.4f' % l for l in [avg_cdc, avg_cd1, avg_cd2]]))
             (epoch_idx, 300, epoch_end_time - epoch_start_time, ['%.4f' % l for l in [avg_cdc, avg_cd1, avg_cd2]]))
 
-        if epoch_idx % 1 == 0:
-            # Validate the current model
+        
+        if epoch_idx >= 150:
+            if 150 <= epoch_idx <= 240 and epoch_idx % 20 == 0:
+            # Validate and Checkpoint
             cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model)
-            # Save checkpoints
-            #if epoch_idx % cfg.TRAIN.SAVE_FREQ == 0 or cd_eval < best_metrics:
-            if epoch_idx % 5 == 0 or cd_eval < best_metrics:
-                if cd_eval < best_metrics:
-                    best_metrics = cd_eval
-                    BestEpoch = epoch_idx
-                    file_name = 'ckpt-best.pth'
+            if cd_eval < best_metrics:
+                best_metrics = cd_eval
+                BestEpoch = epoch_idx
+                file_name = 'ckpt-best.pth'
+            else:
+                file_name = f'ckpt-epoch-{epoch_idx:03d}.pth'
+            output_path = os.path.join(DIR_CHECKPOINTS, file_name)
+            torch.save({'model': model.state_dict(), 'optimizer': optimizer.state_dict()}, output_path)
+            logging.info('Saved checkpoint to %s ...' % output_path)
 
-                else:
-                    file_name = 'ckpt-epoch-%03d.pth' % epoch_idx
-                #output_path = os.path.join(cfg.DIR.CHECKPOINTS, file_name)
-                output_path = os.path.join(DIR_CHECKPOINTS, file_name)
-                torch.save({
-                    'model': model.state_dict(),
-                    'optimizer': optimizer.state_dict()
-                }, output_path)
+        elif 240 < epoch_idx <= 280 and epoch_idx % 10 == 0:
+            # Similar operation as above
+            cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model)
+            if cd_eval < best_metrics:
+                best_metrics = cd_eval
+                BestEpoch = epoch_idx
+                file_name = 'ckpt-best.pth'
+            else:
+                file_name = f'ckpt-epoch-{epoch_idx:03d}.pth'
+            output_path = os.path.join(DIR_CHECKPOINTS, file_name)
+            torch.save({'model': model.state_dict(), 'optimizer': optimizer.state_dict()}, output_path)
+            logging.info('Saved checkpoint to %s ...' % output_path)
 
-                logging.info('Saved checkpoint to %s ...' % output_path)
+        elif 280 < epoch_idx <= 300:
+            # Again, similar operation as above
+            cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model)
+            if cd_eval < best_metrics:
+                best_metrics = cd_eval
+                BestEpoch = epoch_idx
+                file_name = 'ckpt-best.pth'
+            else:
+                file_name = f'ckpt-epoch-{epoch_idx:03d}.pth'
+            output_path = os.path.join(DIR_CHECKPOINTS, file_name)
+            torch.save({'model': model.state_dict(), 'optimizer': optimizer.state_dict()}, output_path)
+            logging.info('Saved checkpoint to %s ...' % output_path)
 
-        logging.info('Best Performance: Epoch %d -- CD %.4f' % (BestEpoch,best_metrics))
+    # Other training operations here
 
+# Log the best performance after all epochs
+        logging.info('Best Performance: Epoch %d -- CD %.4f' % (BestEpoch, best_metrics))
     train_writer.close()
     val_writer.close()
