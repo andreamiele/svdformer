@@ -32,16 +32,15 @@ def convert_to_3d_point_cloud(drawing):
     :param drawing: 2D drawing tensor of shape 28x28.
     :return: 3D point cloud tensor of shape 28x28x28.
     """
-    # Reshape the drawing to 28x28
-    drawing = drawing.view(28, 28)
+    # Add to the numpy list of 2D points a column of 0 to map to the hyperplane z=0 in R³
+    tmp = np.zeros((drawing.shape[0]/2, 3))
+    tmp[:,:-1] = drawing.reshape((drawing.shape[0]/2,2))
 
-    # Create a 3D tensor filled with zeros
-    point_cloud = torch.zeros((28, 28, 28), dtype=drawing.dtype)
-
-    # Place the 2D drawing in the xy-plane at z=0
-    point_cloud[:, :, 0] = drawing
+    # Convert to torch tensor
+    point_cloud = torch.from_numpy(tmp)
 
     return point_cloud
+
 
 def convert_to_3d_point_cloud_data(drawings):
     """
