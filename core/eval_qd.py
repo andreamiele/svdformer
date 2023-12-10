@@ -16,18 +16,23 @@ from utils.average_meter import AverageMeter
 from utils.loss_utils import *
 from models.model_utils import PCViews
 from models.SVDFormer import Model
+import numpy as np
 
 def convert_to_3d_point_cloud(drawing):
     """
     Converts a 2D drawing to a 3D point cloud tensor of shape 28x28x28.
+
     :param drawing: 2D drawing tensor of shape 28x28.
     :return: 3D point cloud tensor of shape 28x28x28.
     """
-    drawing = drawing.view(28, 28)
-    point_cloud = torch.zeros((28, 28, 28), dtype=drawing.dtype)
-    point_cloud[:, :, 0] = drawing
-    return point_cloud
+    # Add to the numpy list of 2D points a column of 0 to map to the hyperplane z=0 in R³
+    tmp = np.zeros((int(drawing.shape[0]/2), 3))
+    tmp[:,:-1] = drawing.reshape((int(drawing.shape[0]/2),2))
 
+    # Convert to torch tensor
+    point_cloud = torch.from_numpy(tmp).float()
+
+    return point_cloud
 def convert_to_3d_point_cloud_data(drawings):
     """
     Converts a batch of 2D drawings to 3D point clouds, each of shape 28x28x28.
@@ -115,7 +120,7 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, model=N
                 # partial = data['partial_cloud']
                 #gt = data['gtcloud']
            
-                gt = convert_batch_to_xyz_format(convert_to_3d_point_cloud_data(data)).cuda()
+                gt = convert_to_3d_point_cloud_data(data).cuda()
                 print(gt.size())
                 batchsize,npoints,_ = gt.size()
                 num_crop = int(npoints * crop_ratio[mode])
