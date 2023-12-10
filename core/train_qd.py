@@ -24,6 +24,7 @@ from utils.helpers import seprate_point_cloud
 from models.model_utils import PCViews
 from models.SVDFormer import Model
 from core.eval_qd import test_net
+import numpy as np
 
 def convert_to_3d_point_cloud(drawing):
     """
@@ -33,11 +34,11 @@ def convert_to_3d_point_cloud(drawing):
     :return: 3D point cloud tensor of shape 28x28x28.
     """
     # Add to the numpy list of 2D points a column of 0 to map to the hyperplane z=0 in R³
-    tmp = np.zeros((drawing.shape[0]/2, 3))
-    tmp[:,:-1] = drawing.reshape((drawing.shape[0]/2,2))
+    tmp = np.zeros((int(drawing.shape[0]/2), 3))
+    tmp[:,:-1] = drawing.reshape((int(drawing.shape[0]/2),2))
 
     # Convert to torch tensor
-    point_cloud = torch.from_numpy(tmp)
+    point_cloud = torch.from_numpy(tmp).float()
 
     return point_cloud
 
@@ -178,7 +179,7 @@ def train_net(cfg):
                 #    data[k] = utils.helpers.var_or_cuda(v)
                 # partial = data['partial_cloud']
                 #gt = data['gtcloud']
-                gt = convert_batch_to_xyz_format(convert_to_3d_point_cloud_data(data)).cuda()
+                gt = convert_to_3d_point_cloud_data(data).cuda()
                 batchsize,npoints,_ = gt.size()
                 if batchsize%2 != 0:
                     gt = torch.cat([gt,gt],0)
@@ -230,17 +231,17 @@ def train_net(cfg):
         
         if epoch_idx >= 150:
             if 150 <= epoch_idx <= 240 and epoch_idx % 20 == 0:
-            # Validate and Checkpoint
-            cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model)
-            if cd_eval < best_metrics:
-                best_metrics = cd_eval
-                BestEpoch = epoch_idx
-                file_name = 'ckpt-best.pth'
-            else:
-                file_name = f'ckpt-epoch-{epoch_idx:03d}.pth'
-            output_path = os.path.join(DIR_CHECKPOINTS, file_name)
-            torch.save({'model': model.state_dict(), 'optimizer': optimizer.state_dict()}, output_path)
-            logging.info('Saved checkpoint to %s ...' % output_path)
+              # Validate and Checkpoint
+              cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model)
+              if cd_eval < best_metrics:
+                  best_metrics = cd_eval
+                  BestEpoch = epoch_idx
+                  file_name = 'ckpt-best.pth'
+              else:
+                  file_name = f'ckpt-epoch-{epoch_idx:03d}.pth'
+              output_path = os.path.join(DIR_CHECKPOINTS, file_name)
+              torch.save({'model': model.state_dict(), 'optimizer': optimizer.state_dict()}, output_path)
+              logging.info('Saved checkpoint to %s ...' % output_path)
 
         elif 240 < epoch_idx <= 280 and epoch_idx % 10 == 0:
             # Similar operation as above
