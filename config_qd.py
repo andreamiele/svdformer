@@ -7,7 +7,7 @@ cfg = __C
 __C.DATASETS                                     = edict()
 __C.DATASETS.SHAPENET55                          = edict()
 __C.DATASETS.SHAPENET55.CATEGORY_FILE_PATH       = '/content/svdformer_/quickdraw_dataset'
-__C.DATASETS.SHAPENET55.N_POINTS                 = 1024
+__C.DATASETS.SHAPENET55.N_POINTS                 = 312
 __C.DATASETS.SHAPENET55.COMPLETE_POINTS_PATH     = '/content/svdformer_/quickdraw_dataset'
 
 # Dataset
@@ -29,8 +29,8 @@ __C.CONST.DEVICE = '0,1'
 
 # Network
 __C.NETWORK = edict()
-__C.NETWORK.step1 = 2
-__C.NETWORK.step2 = 4
+__C.NETWORK.step1 = 1
+__C.NETWORK.step2 = 2
 __C.NETWORK.merge_points = 1024  # This will need to be updated based on QuickDraw specifics
 __C.NETWORK.local_points = 1024  # This will need to be updated based on QuickDraw specifics
 __C.NETWORK.view_distance = 1.5  # This concept may not apply to QuickDraw sketches
