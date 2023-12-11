@@ -13,9 +13,9 @@ class FeatureExtractor(nn.Module):
         """Encoder that encodes information of partial point cloud
         """
         super(FeatureExtractor, self).__init__()
-        self.sa_module_1 = PointNet_SA_Module_KNN(512, 16, 3, [64, 128], group_all=False, if_bn=False, if_idx=True)
-        self.sa_module_2 = PointNet_SA_Module_KNN(128, 16, 128, [128, 256], group_all=False, if_bn=False, if_idx=True)
-        self.sa_module_3 = PointNet_SA_Module_KNN(None, None, 256, [512, out_dim], group_all=True, if_bn=False)
+        self.sa_module_1 = PointNet_SA_Module_KNN(512, 16, 3, [32, 64], group_all=False, if_bn=False, if_idx=True)
+        self.sa_module_2 = PointNet_SA_Module_KNN(64, 16, 64, [64, 128], group_all=False, if_bn=False, if_idx=True)
+        self.sa_module_3 = PointNet_SA_Module_KNN(None, None, 128, [256, out_dim], group_all=True, if_bn=False)
 
     def forward(self, point_cloud):
         """
@@ -167,8 +167,8 @@ class SVFNet(nn.Module):
 class local_encoder(nn.Module):
     def __init__(self,cfg):
         super(local_encoder, self).__init__()
-        self.gcn_1 = EdgeConv(3, 64, 16)
-        self.gcn_2 = EdgeConv(64, 256, 8)
+        self.gcn_1 = EdgeConv(3, 32, 16)
+        self.gcn_2 = EdgeConv(32, 256, 8)
         self.local_number = cfg.NETWORK.local_points
 
     def forward(self,input):
@@ -186,8 +186,8 @@ class Model(nn.Module):
         self.encoder = SVFNet(cfg)
         self.localencoder = local_encoder(cfg)
         self.merge_points = cfg.NETWORK.merge_points
-        self.refine1 = SDG(ratio=cfg.NETWORK.step1,hidden_dim=768,dataset=cfg.DATASET.TEST_DATASET)
-        self.refine2 = SDG(ratio=cfg.NETWORK.step2,hidden_dim=512,dataset=cfg.DATASET.TEST_DATASET)
+        self.refine1 = SDG(ratio=cfg.NETWORK.step1,hidden_dim=384,dataset=cfg.DATASET.TEST_DATASET)
+        self.refine2 = SDG(ratio=cfg.NETWORK.step2,hidden_dim=256,dataset=cfg.DATASET.TEST_DATASET)
 
     def forward(self, partial,depth):
         partial = partial.transpose(1,2).contiguous()
@@ -201,7 +201,6 @@ class Model(nn.Module):
         fine2 = self.refine2(local_feat, fine1, feat_g,partial)
 
         return (coarse.transpose(1, 2).contiguous(),fine1.transpose(1, 2).contiguous(),fine2.transpose(1, 2).contiguous())
-
 
 
 
