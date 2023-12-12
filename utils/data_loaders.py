@@ -336,7 +336,7 @@ class QDDataLoader(object):
         # Load the dataset indexing file
         with open(
                 #os.path.join(cfg.DATASETS.QD.CATEGORY_FILE_PATH,
-                os.path.join('/content/svdformer_/quickdraw_dataset',
+                os.path.join(cfg.DATASETS.QUICKDRAW.COMPLETE_POINTS_PATH,
                   subset + '.txt'), 'r') as f:
             lines = f.readlines()
 
@@ -345,7 +345,7 @@ class QDDataLoader(object):
         for line in lines:
             line = line.strip()
             #file_list.append(cfg.DATASETS.QD.COMPLETE_POINTS_PATH % (line))
-            file_list.append("/content/svdformer_/quickdraw_dataset/%s" % (line))
+            file_list.append((cfg.DATASETS.QUICKDRAW.COMPLETE_POINTS_PATH +"/%s") % (line))
 
         print('Complete collecting files of the dataset. Total files: %d' %
               len(file_list))

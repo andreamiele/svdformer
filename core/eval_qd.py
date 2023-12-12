@@ -71,9 +71,7 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, model=N
         test_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING["QuickDraw"](cfg).get_dataset("test")
         test_data_loader = torch.utils.data.DataLoader(dataset=test_dataset_loader,
                                                   batch_size=2,
-                                                  #num_workers=cfg.CONST.NUM_WORKERS//2,
-                                                  num_workers=2,
-                                                  #collate_fn=utils.data_loaders.collate_fn_55,
+                                                  num_workers=cfg.CONST.NUM_WORKERS//2,
                                                   pin_memory=True,
                                                   shuffle=False)
     '''
@@ -113,12 +111,6 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, model=N
     # Testing loop
     with tqdm(test_data_loader) as t:
             for batch_idx, data in enumerate(test_data_loader):
-
-
-                #for k, v in data.items():
-                #    data[k] = utils.helpers.var_or_cuda(v)
-                # partial = data['partial_cloud']
-                #gt = data['gtcloud']
            
                 gt = convert_to_3d_point_cloud_data(data).cuda()
                 print(gt.size())

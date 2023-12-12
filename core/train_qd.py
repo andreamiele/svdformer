@@ -89,35 +89,27 @@ def train_net(cfg):
     test_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING["QuickDraw"](cfg).get_dataset("test")
 
     train_data_loader = torch.utils.data.DataLoader(dataset=train_dataset_loader,
-                                                    #batch_size=cfg.TRAIN.BATCH_SIZE,
-                                                    #num_workers=cfg.CONST.NUM_WORKERS,
-                                                    batch_size=4,
-                                                    num_workers=2,
-                                                    #collate_fn=utils.data_loaders.collate_fn_55,
+                                                    batch_size=cfg.TRAIN.BATCH_SIZE,
+                                                    num_workers=cfg.CONST.NUM_WORKERS,
                                                     pin_memory=True,
                                                     shuffle=True,
                                                     drop_last=False)
     val_data_loader = torch.utils.data.DataLoader(dataset=test_dataset_loader,
                                                   batch_size=2,
-                                                  #num_workers=cfg.CONST.NUM_WORKERS//2,
-                                                  num_workers=2,
-                                                  #collate_fn=utils.data_loaders.collate_fn_55,
+                                                  num_workers=cfg.CONST.NUM_WORKERS//2,
                                                   pin_memory=True,
                                                   shuffle=False)
 
     # Set up folders for logs and checkpoints
-    #output_dir = os.path.join(cfg.DIR.OUT_PATH, '%s', datetime.now().isoformat())
-    output_dir = os.path.join("quickdraw-out", '%s', datetime.now().isoformat())
-    #cfg.DIR.CHECKPOINTS = output_dir % 'checkpoints'
-    #cfg.DIR.LOGS = output_dir % 'logs'
-    DIR_CHECKPOINTS = output_dir % 'checkpoints'
-    DIR_LOGS = output_dir % 'logs'
-    if not os.path.exists(DIR_CHECKPOINTS):
-        os.makedirs(DIR_CHECKPOINTS)
+    output_dir = os.path.join(cfg.DIR.OUT_PATH, '%s', datetime.now().isoformat())
+    cfg.DIR.CHECKPOINTS = output_dir % 'checkpoints'
+    cfg.DIR.LOGS = output_dir % 'logs'
+    if not os.path.exists(cfg.DIR.CHECKPOINTS ):
+        os.makedirs(cfg.DIR.CHECKPOINTS )
 
     # Create tensorboard writers
-    train_writer = SummaryWriter(os.path.join(DIR_LOGS, 'train'))
-    val_writer = SummaryWriter(os.path.join(DIR_LOGS, 'test'))
+    train_writer = SummaryWriter(os.path.join(cfg.DIR.LOGS, 'train'))
+    val_writer = SummaryWriter(os.path.join(cfg.DIR.LOGS, 'test'))
 
     model = Model(cfg)
     if torch.cuda.is_available():
@@ -125,15 +117,13 @@ def train_net(cfg):
 
     # Create the optimizers
     optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()),
-                                 #lr=cfg.TRAIN.LEARNING_RATE,
-                                 lr=0.0001,
+                                 lr=cfg.TRAIN.LEARNING_RATE,
                                  weight_decay=0.0005)
 
     # lr scheduler
-    #scheduler_steplr = StepLR(optimizer, step_size=cfg.TRAIN.LR_DECAY_STEP, gamma=cfg.TRAIN.GAMMA)
-    scheduler_steplr = StepLR(optimizer, step_size=2, gamma=0.98)
+    scheduler_steplr = StepLR(optimizer, step_size=cfg.TRAIN.LR_DECAY_STEP, gamma=cfg.TRAIN.GAMMA)
 
-    lr_scheduler = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=300,#cfg.TRAIN.WARMUP_STEPS,
+    lr_scheduler = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=cfg.TRAIN.WARMUP_STEPS,
                                           after_scheduler=scheduler_steplr)
 
 
@@ -142,8 +132,7 @@ def train_net(cfg):
     steps = 0
     BestEpoch = 0
 
-    #render = PCViews(TRANS=-cfg.NETWORK.view_distance, RESOLUTION=224)
-    render = PCViews(TRANS=-1.5, RESOLUTION=224)
+    render = PCViews(TRANS=-cfg.NETWORK.view_distance, RESOLUTION=224)
     """
     if 'WEIGHTS' in cfg.CONST:
         logging.info('Recovering from %s ...' % (cfg.CONST.WEIGHTS))
@@ -157,7 +146,7 @@ def train_net(cfg):
         logging.info('Recover complete.')
     """
     # Training/Testing the network
-    for epoch_idx in range(init_epoch + 1, 300+1):#cfg.TRAIN.N_EPOCHS + 1):
+    for epoch_idx in range(init_epoch + 1, cfg.TRAIN.N_EPOCHS + 1):
         epoch_start_time = time()
 
         batch_time = AverageMeter()
@@ -175,10 +164,6 @@ def train_net(cfg):
         with tqdm(train_data_loader) as t:
             for batch_idx, data in enumerate(t):
                 data_time.update(time() - batch_end_time)
-                #for k, v in data.items():
-                #    data[k] = utils.helpers.var_or_cuda(v)
-                # partial = data['partial_cloud']
-                #gt = data['gtcloud']
                 gt = convert_to_3d_point_cloud_data(data).cuda()
                 batchsize,npoints,_ = gt.size()
                 if batchsize%2 != 0:
@@ -205,12 +190,10 @@ def train_net(cfg):
                 train_writer.add_scalar('Loss/Batch/cd_p2', cd_p2_item, n_itr)
                 batch_time.update(time() - batch_end_time)
                 batch_end_time = time()
-                #t.set_description('[Epoch %d/%d][Batch %d/%d]' % (epoch_idx, cfg.TRAIN.N_EPOCHS, batch_idx + 1, n_batches))
-                t.set_description('[Epoch %d/%d][Batch %d/%d]' % (epoch_idx, 300, batch_idx + 1, n_batches))
+                t.set_description('[Epoch %d/%d][Batch %d/%d]' % (epoch_idx, cfg.TRAIN.N_EPOCHS, batch_idx + 1, n_batches))
                 t.set_postfix(loss='%s' % ['%.4f' % l for l in [cd_pc_item, cd_p1_item, cd_p2_item]])
 
-                #if steps <= cfg.TRAIN.WARMUP_STEPS:
-                if steps <= 300:
+                if steps <= cfg.TRAIN.WARMUP_STEPS:
                     lr_scheduler.step()
                     steps += 1
 
@@ -225,8 +208,7 @@ def train_net(cfg):
         train_writer.add_scalar('Loss/Epoch/cd_p2', avg_cd2, epoch_idx)
         logging.info(
             '[Epoch %d/%d] EpochTime = %.3f (s) Losses = %s' %
-            #(epoch_idx, cfg.TRAIN.N_EPOCHS, epoch_end_time - epoch_start_time, ['%.4f' % l for l in [avg_cdc, avg_cd1, avg_cd2]]))
-            (epoch_idx, 300, epoch_end_time - epoch_start_time, ['%.4f' % l for l in [avg_cdc, avg_cd1, avg_cd2]]))
+            (epoch_idx, cfg.TRAIN.N_EPOCHS, epoch_end_time - epoch_start_time, ['%.4f' % l for l in [avg_cdc, avg_cd1, avg_cd2]]))
 
         
         if epoch_idx >= 150:
@@ -239,7 +221,7 @@ def train_net(cfg):
                   file_name = 'ckpt-best.pth'
               else:
                   file_name = f'ckpt-epoch-{epoch_idx:03d}.pth'
-              output_path = os.path.join(DIR_CHECKPOINTS, file_name)
+              output_path = os.path.join(cfg.DIR.CHECKPOINTS, file_name)
               torch.save({'model': model.state_dict(), 'optimizer': optimizer.state_dict()}, output_path)
               logging.info('Saved checkpoint to %s ...' % output_path)
 
@@ -252,7 +234,7 @@ def train_net(cfg):
                     file_name = 'ckpt-best.pth'
                 else:
                     file_name = f'ckpt-epoch-{epoch_idx:03d}.pth'
-                output_path = os.path.join(DIR_CHECKPOINTS, file_name)
+                output_path = os.path.join(cfg.DIR.CHECKPOINTS, file_name)
                 torch.save({'model': model.state_dict(), 'optimizer': optimizer.state_dict()}, output_path)
                 logging.info('Saved checkpoint to %s ...' % output_path)
     
@@ -265,7 +247,7 @@ def train_net(cfg):
                     file_name = 'ckpt-best.pth'
                 else:
                     file_name = f'ckpt-epoch-{epoch_idx:03d}.pth'
-                output_path = os.path.join(DIR_CHECKPOINTS, file_name)
+                output_path = os.path.join(cfg.DIR.CHECKPOINTS, file_name)
                 torch.save({'model': model.state_dict(), 'optimizer': optimizer.state_dict()}, output_path)
                 logging.info('Saved checkpoint to %s ...' % output_path)
 

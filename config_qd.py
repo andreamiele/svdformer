@@ -5,10 +5,10 @@ cfg = __C
 
 # Dataset Config
 __C.DATASETS                                     = edict()
-__C.DATASETS.SHAPENET55                          = edict()
-__C.DATASETS.SHAPENET55.CATEGORY_FILE_PATH       = '/content/svdformer_/quickdraw_dataset'
-__C.DATASETS.SHAPENET55.N_POINTS                 = 312
-__C.DATASETS.SHAPENET55.COMPLETE_POINTS_PATH     = '/content/svdformer_/quickdraw_dataset'
+__C.DATASETS.QUICKDRAW                          = edict()
+__C.DATASETS.QUICKDRAW.CATEGORY_FILE_PATH       = '/content/svdformer_/quickdraw_dataset'
+__C.DATASETS.QUICKDRAW.N_POINTS                 = 312
+__C.DATASETS.QUICKDRAW.COMPLETE_POINTS_PATH     = '/content/svdformer_/quickdraw_dataset'
 
 # Dataset
 __C.DATASET                                      = edict()
@@ -17,7 +17,7 @@ __C.DATASET.TEST_DATASET                         = 'QuickDraw'
 
 # Constants
 __C.CONST = edict()
-__C.CONST.NUM_WORKERS = 4
+__C.CONST.NUM_WORKERS = 2
 __C.CONST.N_INPUT_POINTS = 1024  # Number of points per QuickDraw sketch, may require adjustment
 __C.CONST.mode = 'easy'  # This mode concept may not apply to QuickDraw as it is for point clouds
 
