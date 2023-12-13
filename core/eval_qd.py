@@ -25,21 +25,22 @@ def convert_to_3d_point_cloud(drawing):
     :param drawing: 2D drawing tensor of shape 28x28.
     :return: 3D point cloud tensor of shape 28x28x28.
     """
-    # Add to the numpy list of 2D points a column of 0 to map to the hyperplane z=0 in R³
-    tmp = np.zeros((int(drawing.shape[0]/2), 3))
-    tmp[:,:-1] = drawing.reshape((int(drawing.shape[0]/2),2))
-
     # Convert to torch tensor
-    point_cloud = torch.from_numpy(tmp).float()
+    point_cloud = drawing.float()
 
     return point_cloud
+
+
 def convert_to_3d_point_cloud_data(drawings):
     """
     Converts a batch of 2D drawings to 3D point clouds, each of shape 28x28x28.
+
     :param drawings: Batch of 2D drawing tensors.
     :return: Batch of 3D point cloud tensors.
     """
     res = [convert_to_3d_point_cloud(drawing) for drawing in drawings]
+
+    # Stack all tensors in the list to create a batch tensor
     return torch.stack(res)
 
 def convert_grid_to_point_list(point_cloud):
@@ -63,7 +64,7 @@ def convert_batch_to_xyz_format(batch_point_clouds):
     padded_point_list_batch = [torch.nn.functional.pad(points, (0, 0, 0, max_points - points.size(0))) for points in point_list_batch]
     return torch.stack(padded_point_list_batch)
 
-def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, model=None):
+def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, model=None, best_metrics=None):
     torch.backends.cudnn.benchmark = True
 
     if test_data_loader is None:
@@ -110,7 +111,8 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, model=N
 
     # Testing loop
     with tqdm(test_data_loader) as t:
-            for batch_idx, data in enumerate(test_data_loader):
+            for batch_idx, (data, class_names) in enumerate(t):
+                names=class_names
            
                 gt = convert_to_3d_point_cloud_data(data).cuda()
                 print(gt.size())
@@ -130,9 +132,15 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, model=N
 
                     _metrics = [cd, dcd, f1]
                     test_losses.update([cd, dcd, f1])
-
+            
                     test_metrics.update(_metrics)
-
+                    if test_losses.avg(0)<best_metrics:
+                      output_array = pcds_pred[-1].cpu().detach().numpy()
+                      gt_array=gt.cpu().detach().numpy()
+                    # Convert PyTorch tensor to NumPy array and save
+                      for i,name in enumerate(names):
+                        np.save(f'/content/out/output_batch_{batch_idx}_partial_{partial_id}_drawing{i}_{name}.npy', output_array[i])
+                        np.save(f'/content/out/gt_batch_{batch_idx}_partial_{partial_id}_drawing{i}_{name}.npy', gt_array[i])
                     t.set_description('Test[%d/%d]  Losses = %s Metrics = %s' %(batch_idx, n_samples,  ['%.4f' % l for l in test_losses.avg()
                                                                                 ], ['%.4f' % m for m in _metrics]))
 
@@ -161,5 +169,5 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, model=N
         test_writer.add_scalar('Loss/Epoch/f1', test_losses.avg(2), epoch_idx)
         for i, metric in enumerate(test_metrics.items):
             test_writer.add_scalar('Metric/%s' % metric, test_metrics.avg(i), epoch_idx)
-
+    
     return test_losses.avg(0)

@@ -33,12 +33,8 @@ def convert_to_3d_point_cloud(drawing):
     :param drawing: 2D drawing tensor of shape 28x28.
     :return: 3D point cloud tensor of shape 28x28x28.
     """
-    # Add to the numpy list of 2D points a column of 0 to map to the hyperplane z=0 in R³
-    tmp = np.zeros((int(drawing.shape[0]/2), 3))
-    tmp[:,:-1] = drawing.reshape((int(drawing.shape[0]/2),2))
-
     # Convert to torch tensor
-    point_cloud = torch.from_numpy(tmp).float()
+    point_cloud = drawing.float()
 
     return point_cloud
 
@@ -162,7 +158,8 @@ def train_net(cfg):
         n_batches = len(train_data_loader)
         print('epoch: ', epoch_idx, 'optimizer: ', optimizer.param_groups[0]['lr'])
         with tqdm(train_data_loader) as t:
-            for batch_idx, data in enumerate(t):
+            for batch_idx, (data, class_names) in enumerate(t):
+                names=np.unique(class_names)
                 data_time.update(time() - batch_end_time)
                 gt = convert_to_3d_point_cloud_data(data).cuda()
                 batchsize,npoints,_ = gt.size()
@@ -210,11 +207,21 @@ def train_net(cfg):
             '[Epoch %d/%d] EpochTime = %.3f (s) Losses = %s' %
             (epoch_idx, cfg.TRAIN.N_EPOCHS, epoch_end_time - epoch_start_time, ['%.4f' % l for l in [avg_cdc, avg_cd1, avg_cd2]]))
 
-        
-        if epoch_idx >= 150:
+        if epoch_idx ==5:
+              cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model, best_metrics)
+              if cd_eval < best_metrics:
+                  best_metrics = cd_eval
+                  BestEpoch = epoch_idx
+                  file_name = 'ckpt-best.pth'
+              else:
+                  file_name = f'ckpt-epoch-{epoch_idx:03d}.pth'
+              output_path = os.path.join(cfg.DIR.CHECKPOINTS, file_name)
+              torch.save({'model': model.state_dict(), 'optimizer': optimizer.state_dict()}, output_path)
+              logging.info('Saved checkpoint to %s ...' % output_path)
+        if epoch_idx > 150:
             if 150 <= epoch_idx <= 240 and epoch_idx % 20 == 0:
               # Validate and Checkpoint
-              cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model)
+              cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model, best_metrics)
               if cd_eval < best_metrics:
                   best_metrics = cd_eval
                   BestEpoch = epoch_idx
@@ -227,7 +234,7 @@ def train_net(cfg):
 
             elif 240 < epoch_idx <= 280 and epoch_idx % 10 == 0:
                 # Similar operation as above
-                cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model)
+                cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model, best_metrics)
                 if cd_eval < best_metrics:
                     best_metrics = cd_eval
                     BestEpoch = epoch_idx
@@ -240,7 +247,7 @@ def train_net(cfg):
     
             elif 280 < epoch_idx <= 300:
                 # Again, similar operation as above
-                cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model)
+                cd_eval = test_net(cfg, epoch_idx, val_data_loader, val_writer, model, best_metrics)
                 if cd_eval < best_metrics:
                     best_metrics = cd_eval
                     BestEpoch = epoch_idx

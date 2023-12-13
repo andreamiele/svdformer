@@ -304,13 +304,15 @@ class QDDataset(torch.utils.data.dataset.Dataset):
 
     def __getitem__(self, idx):
         file_path = self.file_list[idx]
-        
+
+        class_name = os.path.basename(file_path).split('-')[0]
+
         data = torch.from_numpy(IO.get(file_path).astype(np.float32))
 
         if self.transforms is not None:
             data = self.transforms(data)
 
-        return data
+        return data, class_name
 
 class QDDataLoader(object):
     """
