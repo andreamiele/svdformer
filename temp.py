@@ -1,7 +1,10 @@
 import numpy as np
 from os import listdir
 from os.path import isfile, join
-onlyfiles = ["/home/dehame/svdformer_/quickdraw_dataset/"+f for f in listdir("/home/dehame/svdformer_/quickdraw_dataset") if isfile(join("/home/dehame/svdformer_/quickdraw_dataset/", f)) and f.split(".")[-1] == "npy" and len(f.split("-")) == 1]
+
+dataset_path
+
+onlyfiles = [dataset_path+"/"+f for f in listdir(dataset_path) if isfile(join(dataset_path+"/", f)) and f.split(".")[-1] == "npy" and len(f.split("-")) == 1]
 
 nbExamplesPerClass = 400
 
@@ -41,7 +44,7 @@ for file in onlyfiles:
       l -= 1
       example = np.delete(example, ind)
     name = file.split('.')[0] + f"-{i}.npy"
-    np.save("quickdraw_dataset/" + name, example)
+    np.save(name, example)
     if i < nbExamplesPerClass*3/4:
       train.write(name+"\n")
     else:

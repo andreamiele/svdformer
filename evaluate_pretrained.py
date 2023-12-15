@@ -43,10 +43,10 @@ crop_ratio = {
     }
 
 
-onlyfiles = [files_path+"/"+f for f in listdir(files_path) if isfile(join(files_path, f)) and f.split(".")[-1] == "npy" and len(f.split("_")) > 1]
+onlyfiles = [files_path+"/"+f for f in listdir(files_path) if isfile(join(files_path+"/", f)) and f.split(".")[-1] == "npy" and len(f.split("_")) > 1]
 
 model = Model(cfg)
-model.load_state_dict(torch.load())
+model.load_state_dict(torch.load(model_path))
 model.eval()
 render = PCViews(TRANS=-cfg.NETWORK.view_distance, RESOLUTION=224)
 mode = cfg.CONST.mode
