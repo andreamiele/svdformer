@@ -2,7 +2,7 @@ import numpy as np
 from os import listdir
 from os.path import isfile, join
 
-dataset_path
+dataset_path = ""
 
 onlyfiles = [dataset_path+"/"+f for f in listdir(dataset_path) if isfile(join(dataset_path+"/", f)) and f.split(".")[-1] == "npy" and len(f.split("-")) == 1]
 
