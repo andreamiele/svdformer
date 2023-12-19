@@ -2,11 +2,11 @@ import numpy as np
 from os import listdir
 from os.path import isfile, join
 
-dataset_path = ""
+dataset_path = "quickdraw_dataset"
 
 onlyfiles = [dataset_path+"/"+f for f in listdir(dataset_path) if isfile(join(dataset_path+"/", f)) and f.split(".")[-1] == "npy" and len(f.split("-")) == 1]
-
-nbExamplesPerClass = 400
+listfiles = [dataset_path+"/"+f for f in listdir(dataset_path) if isfile(join(dataset_path+"/", f)) and f.split(".")[-1] == "npy" and len(f.split("-")) == 1]
+nbExamplesPerClass =100
 
 test = open("quickdraw_dataset/test.txt", "w")
 train = open("quickdraw_dataset/train.txt", "w")
@@ -19,13 +19,13 @@ for file in onlyfiles:
   examplesFile = []
   for i, example in enumerate(fileNPY):
     if i == nbExamplesPerClass: break
-    ex = example.reshape(28, 28)
+    ex = example.reshape(256, 256)
     x, y = np.where(ex > 0)
 
     # Replicate the 2D points along the z-axis
-    z_levels = np.arange(28)  # 28 levels along z-axis
-    x_3d = np.tile(x, 28)  # Repeat x-coordinates for each z-level
-    y_3d = np.tile(y, 28)  # Repeat y-coordinates for each z-level
+    z_levels = np.arange(100)  # 28 levels along z-axis
+    x_3d = np.tile(x, 100)  # Repeat x-coordinates for each z-level
+    y_3d = np.tile(y, 100)  # Repeat y-coordinates for each z-level
     z_3d = np.repeat(z_levels, len(x))  # Repeat each z-level len(x) times
 
     ex_3d = np.vstack((x_3d, y_3d, z_3d)).T
@@ -36,18 +36,20 @@ for file in onlyfiles:
     
 print(minNbPts)
 
-for file in onlyfiles:
+for file in listfiles:
   for i, example in enumerate(examples[file]):
-    l = example.shape[0]
-    for _ in range(l - minNbPts):
-      ind = np.random.randint(l)
-      l -= 1
-      example = np.delete(example, ind)
-    name = file.split('.')[0] + f"-{i}.npy"
+    if example.shape[0] > minNbPts:
+        indices_to_keep = np.random.choice(example.shape[0], minNbPts, replace=False)
+        example = example[indices_to_keep, :]
+
+    a,b=file.split("/")
+    c,d= b.split(".")
+    n = f"{c}-{i}.npy"
+    name = f"quickdraw_dataset/{c}-{i}.npy"
     np.save(name, example)
-    if i < nbExamplesPerClass*3/4:
-      train.write(name+"\n")
+    if i < nbExamplesPerClass*1/4:
+      train.write(n+"\n")
     else:
-      test.write(name+"\n")
+      test.write(n+"\n")
 test.close()
 train.close()
